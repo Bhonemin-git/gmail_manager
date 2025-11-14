@@ -1,9 +1,13 @@
 # Gmail N8N Integration
 **Gmail N8N Integration** is a modern web dashboard that connects your Gmail with n8n workflows — enabling real-time email analytics, seamless automation, and effortless email management from one place.
 
-![Email List View](https://github.com/Bhonemin-git/gmail-n8n-webapp/blob/main/public/email-list-view.png)
+### Screenshots
 
-![SLA Tracking Dashboard](https://github.com/Bhonemin-git/gmail-n8n-webapp/blob/main/public/dashboard.png)
+**Email Inbox View**
+![Email Inbox View](https://github.com/Bhonemin-git/gmail-n8n-webapp/blob/main/public/Screenshot%202025-11-14%20150800.png)
+
+**SLA Tracking Dashboard**
+![SLA Tracking Dashboard](https://github.com/Bhonemin-git/gmail-n8n-webapp/blob/main/public/Screenshot%202025-11-14%20150820.png)
 
 ## 🚀 Overview
 **Gmail n8n Integration** is a full-stack platform that bridges your Gmail account and n8n automation workflows with a real-time dashboard, email analytics, and direct Gmail controls, you can visualize, automate, and manage your inbox like never before.
