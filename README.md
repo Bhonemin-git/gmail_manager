@@ -4,7 +4,7 @@
 ### Screenshots
 
 **Email Inbox View**
-![Email Inbox View](public/email_inbox.png)
+![Email Inbox View](public/image.png)
 
 **SLA Tracking Dashboard**
 ![SLA Tracking Dashboard](public/sla_tracking.png)
