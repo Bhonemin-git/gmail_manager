@@ -1,0 +1,173 @@
+{
+  "name": "Register",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "update-mail-track-db",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        112
+      ],
+      "id": "926fc8d1-e059-4267-af85-93840e41f3ce",
+      "name": "Webhook Trigger",
+      "webhookId": "mail-agent-webhook-id"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        144,
+        368
+      ],
+      "id": "aa4b63d3-1d37-40e6-b534-638c929c048c",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "aIzpj0KyvS9cbShz",
+          "mode": "list",
+          "cachedResultName": "sessions",
+          "cachedResultUrl": "/projects/S0ELlUsIUEj0NgGs/datatables/aIzpj0KyvS9cbShz"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "email",
+              "condition": "isNotEmpty"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email": "={{ $json.body.userEmail }}",
+            "token": "={{ $json.body.accessToken }}",
+            "billing_email": "={{ $json.body.emailFields[0].email }}",
+            "bug_report_email": "={{ $json.body.emailFields[1].email }}",
+            "feature_request_email": "={{ $json.body.emailFields[2].email }}",
+            "abuse_report_email": "={{ $json.body.emailFields[3].email }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "token",
+              "displayName": "token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "billing_email",
+              "displayName": "billing_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "bug_report_email",
+              "displayName": "bug_report_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "feature_request_email",
+              "displayName": "feature_request_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "abuse_report_email",
+              "displayName": "abuse_report_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        128,
+        -48
+      ],
+      "id": "dd022fbc-f55a-455d-bfd7-6e1076ad4f04",
+      "name": "Upsert row(s)"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upsert row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f55792b2-3d38-42b3-9faa-fe1c8c40126a",
+  "meta": {
+    "instanceId": "abf64832cb29a8554b908983b31054a2c6cd937fb122b5e375d80d2adaefed0a"
+  },
+  "id": "LOHtgXAhDCNDe4Xp",
+  "tags": []
+}

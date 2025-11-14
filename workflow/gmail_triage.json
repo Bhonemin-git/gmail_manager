@@ -1,0 +1,1201 @@
+{
+  "name": "Team 26",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "62e6c998-199b-40f2-b66a-cb73b60b3525",
+              "name": "sender_email",
+              "value": "={{ $json.payload.headers.find(h => h.name === 'From').value.match(/<([^>]+)>/)[1] }}",
+              "type": "string"
+            },
+            {
+              "id": "bedbb5f6-bd7c-4132-abd5-e3410c4a60ff",
+              "name": "sender_name",
+              "value": "={{ $json.payload.headers.find(h => h.name === 'From').value.split('<')[0].trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "2a243af3-ecc5-4ead-bc77-22a3b3453735",
+              "name": "email_subject",
+              "value": "={{ $json.payload.headers.find(h => h.name === 'Subject').value }}",
+              "type": "string"
+            },
+            {
+              "id": "0566d795-76fe-47d8-956d-187f87db0293",
+              "name": "email_body",
+              "value": "={{ $json.payload.parts ? $json.payload.parts.find(p => p.mimeType === 'text/plain')?.body?.data : $json.payload.body.data }}",
+              "type": "string"
+            },
+            {
+              "id": "2b80473c-0b95-4842-891b-0ae080fab981",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "c255f84f-6069-4c0a-b329-2634a150086d",
+              "name": "Received_at",
+              "value": "={{ $json.payload.headers.find(h => h.name === 'Date')?.value }}\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        944,
+        -752
+      ],
+      "id": "9f0f8b3a-cdb4-4015-941c-33565ec782fa",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"label\": \"1: respond\",\n  \"confidence\": 0.8,\n  \"reason\": \"This email has this category because...\"\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1760,
+        -832
+      ],
+      "id": "f6b061f5-457e-4553-ada2-c05bd48d45d0",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=From: {{ $json.sender_email }}\nName: {{ $json.sender_name }}\nSubject: {{  $json.email_subject }}\nEmail content:\n\n{{  $json.email_body }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "System: You are an automated helpdesk triage assistant. Given one support email, choose exactly one label from this fixed allowed list using the exact spelling, punctuation and keep all the labels small letters. No other label is permitted.\n\nAllowed labels:\n\"1: billing\"\n\"2: bug report\"\n\"3: feature request\"\n\"4: abuse report\"\n\"5: unclear / other\"\n\"6: to respond\"\n\nSchema:\n{\n\"label\": string, // one of the six above exactly\n\"confidence\": number, // if label is 1,2,3,4, or 6 must be >= 0.75; if \"5: Unclear / Other\" must be < 0.75\n\"reason\": string // one-sentence justification\n}\n\nRules:\n\nOutput only valid JSON. No extra text or markdown.\n\nLabel must match exactly including number, colon, spacing, and capitalization.\n\nIf confidence < 0.75 or the email intent is unclear, output only:\n{\"label\":\"5: Unclear / Other\",\"confidence\":<score less than 0.75>,\"reason\":\"<why it is ambiguous or missing>\"}\n\nIf the input violates any rule or cannot be parsed, output:\n{\"label\":\"5: Unclear / Other\",\"confidence\":0.0,\"reason\":\"format violation or instruction conflict\"}\n\nClassify based on the sender’s main intent:\n\"1: Billing\" → questions/issues about invoices, payments, refunds, or charges.\n\"2: Bug Report\" → errors, crashes, or technical malfunctions.\n\"3: Feature Requests\" → suggestions for new or improved functionality.\n\"4: Abuse Report\" → reports of spam, harassment, impersonation, or abuse.\n\"5: Unclear / Other\" → marketing, vague inquiries, off-topic, or insufficient information.\n\"6: To Respond\" → a clear, non-abusive, non-billing/bug/feature request that asks for information or assistance and likely needs a direct human reply (e.g., general how-to questions, account clarifications, pricing inquiries without billing problems).\n\nFew-shot examples:\nEmail: \"My credit card was charged twice for the same invoice!\"\nOutput: {\"label\":\"1: Billing\",\"confidence\":0.95,\"reason\":\"Double charge on an invoice\"}\n\nEmail: \"Your app crashes whenever I upload a file.\"\nOutput: {\"label\":\"2: Bug Report\",\"confidence\":0.91,\"reason\":\"Reports a reproducible app crash\"}\n\nEmail: \"Could you add a dark mode option to the app?\"\nOutput: {\"label\":\"3: Feature Requests\",\"confidence\":0.94,\"reason\":\"Requests a new feature\"}\n\nEmail: \"Someone is impersonating our company in your system.\"\nOutput: {\"label\":\"4: Abuse Report\",\"confidence\":0.93,\"reason\":\"Reports policy-violating behavior\"}\n\nEmail: \"How do I change the team owner on our account?\"\nOutput: {\"label\":\"6: To Respond\",\"confidence\":0.88,\"reason\":\"Direct support question requiring a human reply\"}\n\nEmail: \"Hello, I’d like to discuss partnership opportunities.\"\nOutput: {\"label\":\"5: Unclear / Other\",\"confidence\":0.62,\"reason\":\"Not a support issue among billing/bug/feature/abuse and may be business outreach\"}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1520,
+        -688
+      ],
+      "id": "a684271a-ac98-4540-9a40-a00308ae22d7",
+      "name": "Email AI Agent1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0e01d0d0-ce6e-4b3d-8021-7712b52bb385",
+              "name": "label_id",
+              "value": "={{ $('Get Labels1').item.json.labels.find(item => item.name.toLowerCase().trim() == $('Email AI Agent1').item.json.output.label.toLowerCase().trim())?.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1200,
+        -464
+      ],
+      "id": "f2e369e2-777f-4c55-a143-081d1b8c4584",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e062d0ac-17cd-4983-930d-e07b6349ab0f",
+              "leftValue": "={{ $('Email AI Agent1').item.json.output.label.toLowerCase().trim() }}",
+              "rightValue": "6: to respond",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "73fd723a-c67a-4798-9d44-98c9129cb899",
+              "leftValue": "={{ $('Email AI Agent1').item.json.output.label.toLowerCase().trim() }}",
+              "rightValue": "5: unclear / other",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1680,
+        -464
+      ],
+      "id": "9f13f193-3521-4b90-8ffa-ba3d8fd85565",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Subject: {{ $('Edit Fields2').item.json.email_subject }}\nSender: {{ $('Edit Fields2').item.json.sender_name }}\nEmail Body: {{ $('Edit Fields2').item.json.email_body }}",
+        "options": {
+          "systemMessage": "System: You are a helpdesk reply-drafter. Draft a clear, concise reply to the sender based on the provided email. Assume drafting is required (the workflow has already gated for “6: To Respond”). Output only the plain text draft—no JSON, no code blocks, no extra commentary.\n\nGuidelines:\n\nGreet the sender by name if available.\n\nAcknowledge their context in one brief sentence.\n\nProvide the direct answer or numbered steps.\n\nIf information is missing, ask 1–3 specific clarifying questions at the end.\n\nKeep it friendly, professional, and concise.\n\nDo not invent policies, prices, or legal guarantees.\n\nOutput (plain text only)"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2784,
+        -608
+      ],
+      "id": "54ce08cf-c0dc-4052-805c-e24fc30609fd",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "url": "=https://gmail.googleapis.com/gmail/v1/users/me/messages/{{ $json.id }}?format=full",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Get row(s)').item.json.token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        576,
+        -752
+      ],
+      "id": "91d1bf71-ad74-49d4-94ce-2ccfdf346c70",
+      "name": "Fetch Msg1"
+    },
+    {
+      "parameters": {
+        "url": "https://gmail.googleapis.com/gmail/v1/users/me/messages?q=in:inbox&maxResults=10",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        256,
+        -752
+      ],
+      "id": "a6a98619-caec-4919-95df-63966e388e56",
+      "name": "Get Msg1"
+    },
+    {
+      "parameters": {
+        "url": "https://gmail.googleapis.com/gmail/v1/users/me/labels",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Get row(s)').first().json.token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        784,
+        -464
+      ],
+      "id": "1d122833-4bde-4c89-b2f4-4498206fda26",
+      "name": "Get Labels1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://gmail.googleapis.com/gmail/v1/users/me/messages/{{ $('Fetch Msg1').item.json.id }}/modify",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Get row(s)').item.json.token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ \n  JSON.stringify({ \n    \"addLabelIds\": $('Edit Fields3').item.json.label_id ? [ $('Edit Fields3').item.json.label_id ] : [], \n    \"removeLabelIds\": [] \n  }) \n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1408,
+        -464
+      ],
+      "id": "273f6b33-1101-42d3-9d4f-37081959a434",
+      "name": "Add Labels1"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $json.messages.map(m => ({ json: { id: m.id } }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        -752
+      ],
+      "id": "3f120c3d-b6b7-484e-8716-8dfbc8c19a97",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0a2d5641-ff8a-4a77-a733-669c63b19383",
+              "leftValue": "={{ $('Email AI Agent1').item.json.output.label.toLowerCase().trim() }}",
+              "rightValue": "6: to respond",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2560,
+        -592
+      ],
+      "id": "3fbce99b-e28c-4ab5-8064-7db374aae23b",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://gmail.googleapis.com/upload/gmail/v1/users/me/drafts?uploadType=media",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer   {{ $('Get row(s)').item.json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "message/rfc822",
+        "body": "=To: {{ $('Edit Fields2').item.json.sender_email }}\nSubject: RE: {{ $('Edit Fields2').item.json.email_subject }}\nMIME-Version: 1.0\nContent-Type: text/plain; charset=\"UTF-8\"\nContent-Transfer-Encoding: 7bit\n\n{{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3120,
+        -608
+      ],
+      "id": "0f3de486-6e59-43ae-99e7-6de4903a1e72",
+      "name": "Create a draft1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://gmail.googleapis.com/upload/gmail/v1/users/me/messages/send?uploadType=media",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer   {{ $('Get row(s)').first().json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "message/rfc822",
+        "body": "=To: {{ $('Get row(s)').item.json.billing_email }}\nSubject: \nMIME-Version: 1.0\nContent-Type: text/plain; charset=\"UTF-8\"\nContent-Transfer-Encoding: 7bit\n\nHi ,\n\nA new customer email was auto-routed to your queue via AI.\n\nTriage Info\n- Label: {{ $('Email AI Agent1').item.json.output.label }}\n- Confidence:  {{ $('Email AI Agent1').item.json.output.confidence }}\n- Reason: {{ $('Email AI Agent1').item.json.output.reason }}\n- Received at: {{ $('Edit Fields2').item.json.Received_at }}\n- Ticket ID: {{ $('Edit Fields2').item.json.id }}\n\nCustomer Summary\n- From: {{ $('Edit Fields2').item.json.sender_email }}\n- Subject: {{ $('Edit Fields2').item.json.email_subject }}\n\n\n\nOriginal Message\n----------------------------------------\n{{ $('Decoder').item.json.decoded_body }}\n----------------------------------------\n\nSystem notes\n- Routed by: n8n email triage workflow\n- If misrouted, reply/forward to:  {{ $('Fetch Msg1').item.json.payload.headers[0].value }} with ticket ID {{ $('Edit Fields2').item.json.id }}\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2624,
+        -400
+      ],
+      "id": "c72fb408-b5c9-475b-81a9-cb64643697fd",
+      "name": "Forwarding1"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -128,
+        -752
+      ],
+      "id": "8664ed9c-b80c-47f3-8574-1ebc78ae15eb",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "aIzpj0KyvS9cbShz",
+          "mode": "list",
+          "cachedResultName": "sessions",
+          "cachedResultUrl": "/projects/S0ELlUsIUEj0NgGs/datatables/aIzpj0KyvS9cbShz"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "email",
+              "condition": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        80,
+        -752
+      ],
+      "id": "410d21d3-ba65-4459-be81-5cdf5b609c13",
+      "name": "Get row(s)"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1440,
+        -816
+      ],
+      "id": "fe8efefc-a2d0-4ef8-98db-a0b53cfb6d2d",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "X8xHiK34wgWopb17",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1632,
+        -896
+      ],
+      "id": "71018b58-7506-4248-b4b8-88393a985119",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "X8xHiK34wgWopb17",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2704,
+        -816
+      ],
+      "id": "9dd600b5-ca5a-4897-a5e5-042aef75cd99",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "X8xHiK34wgWopb17",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// decode email body but KEEP item pairing\nconst newItems = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n\n  // your decode logic here 👇\n  let raw =\n    item.json.email_body ||\n    item.json?.payload?.body?.data ||\n    (item.json?.payload?.parts || [])\n      .find(p => p.mimeType === 'text/plain')?.body?.data ||\n    '';\n\n  if (raw) {\n    // fix gmail base64url\n    const fixed = raw.replace(/-/g, '+').replace(/_/g, '/');\n    const decoded = Buffer.from(fixed, 'base64').toString('utf8');\n\n    newItems.push({\n      json: {\n        ...item.json,\n        decoded_body: decoded,\n      },\n      // 👈 THIS is the important part\n      pairedItem: { item: i },\n    });\n  } else {\n    // no body, still keep pairing\n    newItems.push({\n      json: {\n        ...item.json,\n        decoded_body: '[no body found]',\n      },\n      pairedItem: { item: i },\n    });\n  }\n}\n\nreturn newItems;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        -736
+      ],
+      "id": "3dcc0261-5038-4990-a309-95d262585d59",
+      "name": "Decoder"
+    },
+    {
+      "parameters": {
+        "url": "https://gmail.googleapis.com/gmail/v1/users/me/labels",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer  {{ $json.token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "af44a794-6fe7-4a7d-b35b-f12035be7bc6",
+      "name": "HTTP Get Labels",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        224,
+        -1200
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const labelsData = items[0].json.labels || [];\nconst existing = labelsData.map(l => (l.name || \"\").toLowerCase());\n\n// 👇 your required labels\nconst required = [\n  \"1: billing\",\n  \"2: bug report\",\n  \"3: feature request\",\n  \"4: abuse report\",\n  \"5: unclear / other\",\n  \"6: to respond\",\n  \"7: processed\"     // 👈 added this\n];\n\nconst missing = required.filter(label => !existing.includes(label));\n\nreturn missing.map((label, i) => ({\n  json: { label },\n  pairedItem: { item: 0 }\n}));\n"
+      },
+      "id": "a62ff36c-0c61-4537-a665-164977e6d76e",
+      "name": "Check Missing Labels",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        384,
+        -1200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://gmail.googleapis.com/gmail/v1/users/me/labels",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "=Authorization",
+              "value": "=Bearer {{ $('Get row(s)').item.json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $json.label }}"
+            },
+            {
+              "name": "labelListVisibility",
+              "value": "labelShow"
+            },
+            {
+              "name": "messageListVisibility",
+              "value": "show"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4ce9dec4-f670-48fd-b3af-60e02bba5749",
+      "name": "HTTP Create Label",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        576,
+        -1200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "eb33cbfa-4a9f-4350-b599-b1377dbed5b6",
+              "leftValue": "={{ $('Email AI Agent1').item.json.output.label.toLowerCase().trim() }}",
+              "rightValue": "1: billing",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2336,
+        -384
+      ],
+      "id": "1937a470-3504-4d46-a5d7-d672cec51ffd",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b24c4568-b460-466f-970a-9c3d78eeeb11",
+              "leftValue": "={{ $('Email AI Agent1').item.json.output.label.toLowerCase().trim() }}",
+              "rightValue": "2: bug report",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2336,
+        -160
+      ],
+      "id": "9ccbf120-1798-4292-bcfe-c7947962b4cc",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://gmail.googleapis.com/upload/gmail/v1/users/me/messages/send?uploadType=media",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer   {{ $('Get row(s)').first().json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "message/rfc822",
+        "body": "=To: {{ $('Get row(s)').item.json.bug_report_email }}\nSubject: \nMIME-Version: 1.0\nContent-Type: text/plain; charset=\"UTF-8\"\nContent-Transfer-Encoding: 7bit\n\nHi ,\n\nA new customer email was auto-routed to your queue via AI.\n\nTriage Info\n- Label: {{ $('Email AI Agent1').item.json.output.label }}\n- Confidence:  {{ $('Email AI Agent1').item.json.output.confidence }}\n- Reason: {{ $('Email AI Agent1').item.json.output.reason }}\n- Received at: {{ $('Edit Fields2').item.json.Received_at }}\n- Ticket ID: {{ $('Edit Fields2').item.json.id }}\n\nCustomer Summary\n- From: {{ $('Edit Fields2').item.json.sender_email }}\n- Subject: {{ $('Edit Fields2').item.json.email_subject }}\n\n\n\nOriginal Message\n----------------------------------------\n{{ $('Decoder').item.json.decoded_body }}\n----------------------------------------\n\nSystem notes\n- Routed by: n8n email triage workflow\n- If misrouted, reply/forward to: {{ $('Fetch Msg1').item.json.payload.headers[0].value }} with ticket ID {{ $('Edit Fields2').item.json.id }}\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2624,
+        -176
+      ],
+      "id": "20faeb93-119f-4609-bb92-d125f8732355",
+      "name": "Forwarding"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b9690f53-5a6c-4362-bd55-69a4cec4fa85",
+              "leftValue": "={{ $('Email AI Agent1').item.json.output.label.toLowerCase().trim() }}",
+              "rightValue": "3: feature request",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2336,
+        64
+      ],
+      "id": "42f0bb6b-6c50-405e-9630-12dcd6ebd1de",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://gmail.googleapis.com/upload/gmail/v1/users/me/messages/send?uploadType=media",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer   {{ $('Get row(s)').first().json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "message/rfc822",
+        "body": "=To: {{ $('Get row(s)').item.json.feature_request_email }}\nSubject: \nMIME-Version: 1.0\nContent-Type: text/plain; charset=\"UTF-8\"\nContent-Transfer-Encoding: 7bit\n\nHi ,\n\nA new customer email was auto-routed to your queue via AI.\n\nTriage Info\n- Label: {{ $('Email AI Agent1').item.json.output.label }}\n- Confidence:  {{ $('Email AI Agent1').item.json.output.confidence }}\n- Reason: {{ $('Email AI Agent1').item.json.output.reason }}\n- Received at: {{ $('Edit Fields2').item.json.Received_at }}\n- Ticket ID: {{ $('Edit Fields2').item.json.id }}\n\nCustomer Summary\n- From: {{ $('Edit Fields2').item.json.sender_email }}\n- Subject: {{ $('Edit Fields2').item.json.email_subject }}\n\n\n\nOriginal Message\n----------------------------------------\n{{ $('Decoder').item.json.decoded_body }}\n----------------------------------------\n\nSystem notes\n- Routed by: n8n email triage workflow\n- If misrouted, reply/forward to: {{ $('Fetch Msg1').item.json.payload.headers[0].value }} with ticket ID {{ $('Edit Fields2').item.json.id }}\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2624,
+        48
+      ],
+      "id": "e00c58f1-e468-49af-b8de-203d854b6897",
+      "name": "Forwarding2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "07eba3a0-c7be-4c6a-8aee-91e2bba63d9c",
+              "leftValue": "={{ $('Email AI Agent1').item.json.output.label.toLowerCase().trim() }}",
+              "rightValue": "4: abuse report",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2352,
+        272
+      ],
+      "id": "f90aec64-d9ee-4c5c-9457-103288f49703",
+      "name": "If5"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://gmail.googleapis.com/upload/gmail/v1/users/me/messages/send?uploadType=media",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer   {{ $('Get row(s)').first().json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "message/rfc822",
+        "body": "=To: {{ $('Get row(s)').item.json.abuse_report_email }}\nSubject: \nMIME-Version: 1.0\nContent-Type: text/plain; charset=\"UTF-8\"\nContent-Transfer-Encoding: 7bit\n\nHi ,\n\nA new customer email was auto-routed to your queue via AI.\n\nTriage Info\n- Label: {{ $('Email AI Agent1').item.json.output.label }}\n- Confidence:  {{ $('Email AI Agent1').item.json.output.confidence }}\n- Reason: {{ $('Email AI Agent1').item.json.output.reason }}\n- Received at: {{ $('Edit Fields2').item.json.Received_at }}\n- Ticket ID: {{ $('Edit Fields2').item.json.id }}\n\nCustomer Summary\n- From: {{ $('Edit Fields2').item.json.sender_email }}\n- Subject: {{ $('Edit Fields2').item.json.email_subject }}\n\n\n\nOriginal Message\n----------------------------------------\n{{ $('Decoder').item.json.decoded_body }}\n----------------------------------------\n\nSystem notes\n- Routed by: n8n email triage workflow\n- If misrouted, reply/forward to: {{ $('Fetch Msg1').item.json.payload.headers[0].value }} with ticket ID {{ $('Edit Fields2').item.json.id }}\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2624,
+        256
+      ],
+      "id": "9d982fdd-a8f3-407b-a56f-22212d4c04f7",
+      "name": "Forwarding3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://gmail.googleapis.com/gmail/v1/users/me/messages/{{ $('Fetch Msg1').item.json.id }}/modify",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer  {{ $('Get row(s)').item.json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"removeLabelIds\": [\"INBOX\"],\n  \"addLabelIds\": [\n    \"{{ ($node['Get Labels1'].json.labels || []).find(l => l.name === '7: processed')?.id }}\"\n  ]\n}\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3072,
+        -192
+      ],
+      "id": "9c048039-33c4-43d3-a3f0-7c361a15417d",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Decoder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Email AI Agent1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Get Labels1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Add Labels1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Create a draft1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Msg1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Msg1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Labels1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Labels1": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Fetch Msg1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "Get Msg1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Get Labels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Email AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decoder": {
+      "main": [
+        [
+          {
+            "node": "Email AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Get Labels": {
+      "main": [
+        [
+          {
+            "node": "Check Missing Labels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Missing Labels": {
+      "main": [
+        [
+          {
+            "node": "HTTP Create Label",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Forwarding1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Forwarding",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Forwarding2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If5": {
+      "main": [
+        [
+          {
+            "node": "Forwarding3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a draft1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Forwarding1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Forwarding": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Forwarding2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Forwarding3": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "169cfa9c-c4cd-44cf-84d3-bcd34606f188",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "abf64832cb29a8554b908983b31054a2c6cd937fb122b5e375d80d2adaefed0a"
+  },
+  "id": "eDAyaedEKLGJVdsc",
+  "tags": []
+}
