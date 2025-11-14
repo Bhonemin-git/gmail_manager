@@ -4,10 +4,10 @@
 ### Screenshots
 
 **Email Inbox View**
-![Email Inbox View](public/image.png)
+![Email Inbox View](public/Screenshot%202025-11-14%20150800%20copy.png)
 
 **SLA Tracking Dashboard**
-![SLA Tracking Dashboard](public/sla_tracking.png)
+![SLA Tracking Dashboard](public/Screenshot%202025-11-14%20150820.png)
 
 ## 🚀 Overview
 **Gmail n8n Integration** is a full-stack platform that bridges your Gmail account and n8n automation workflows with a real-time dashboard, email analytics, and direct Gmail controls, you can visualize, automate, and manage your inbox like never before.
