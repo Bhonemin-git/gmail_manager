@@ -113,6 +113,9 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 ## 💖 Credits
 Built with ❤️ by Aignition Team-26
-
+Special thanks to our main contributors:
+- [Bhone Min Thant](https://github.com/Bhonemin-git)
+- [Thiha Htoo Zin](https://github.com/thihahtoozin)
+- [Lin Pyae Pyae]()
 
 
